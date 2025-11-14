@@ -177,11 +177,26 @@ city_props = city_summary|>
   )|>
   mutate(tidy_res = map(prop_test, broom::tidy))|>
   unnest(tidy_res)|>
-  select(city_state, estimate, conf.low, conf.high) |>
-  knitr::kable(digits = 3)
+  select(city_state, estimate, conf.low, conf.high) 
   
   city_props
 ```
 
-Create the plot
+Create the plot & arrange by estimate
+```{r}
+organized_city = city_props|>
+  arrange(estimate)|>
+  mutate(city_state = factor(city_state, levels = city_state))
+
+ggplot(organized_city, aes(x=city_state, y=estimate)) +
+geom_point(size = 2) +
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width = 0.3) +
+                 labs(
+                  x = "city",
+                  y = "proportion",
+                  title = "proportion of unsolved homicides by city with confidence intervals"
+                ) +
+                  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
 
