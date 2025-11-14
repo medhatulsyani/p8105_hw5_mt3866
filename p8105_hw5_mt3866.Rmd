@@ -146,7 +146,7 @@ city_summary = homicides |>
   group_by(city_state) |>
   summarize(
     total_homicides = n(),
-    unsolved_homicides = sum(disposition %in% c("Open/No arrest")
+    unsolved_homicides = sum(disposition %in% c("Open/No arrest", "Closed without arrest")
   )) |>
   arrange(desc(total_homicides))
 
