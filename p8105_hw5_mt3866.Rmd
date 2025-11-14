@@ -12,6 +12,7 @@ library(broom)
 ```
 
 Q1
+
 Write a function that randomly draws birthdays out of 365 days & run the function 10000 times for each group size 2-50
 ```{r}
 sim_birthday = function (n) {
@@ -109,4 +110,31 @@ ggplot(mu_summary_long, aes(x = mu, y = average_mu_hat, color = type)) +
   theme_minimal()
 ```
 The sample average mean for tests where the null is rejected is approximately the same generally, however is a bit higher for lower sample averages. The reason for this is because when the mu is small, only the more extreme values will get rejected and this brings selection bias, so the rejected null line is biased upwards in the beginning of the plot in comparison to the all samples line.
+
+Q3
+
+To describe the raw data, there are multiple variable such as the reported date of homicide, victim's first and last name (separately), their race, age, sex, city, state, latitude, longitude, and disposition. There are 52,179 total observations in the data set.
+
+Import homicide data & make a city_state column
+```{r}
+  homicides = read_csv("homicide-data.csv")|>
+  janitor::clean_names()|>
+  mutate(city_state = str_c(city, state, sep = ","))
+```
+
+Summarize by city and obtain total number of homicides and unsolved homicides
+
+```{r}
+city_summary = homicides |>
+  group_by(city_state) |>
+  summarize(
+    total_homicides = n(),
+    unsolved_homicides = sum(disposition %in% c("Open/No arrest")
+  )) |>
+  arrange(desc(total_homicides))
+  
+```
+
+
+
 
