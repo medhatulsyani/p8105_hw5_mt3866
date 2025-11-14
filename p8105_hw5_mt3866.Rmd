@@ -58,11 +58,21 @@ sim_results =
   iter = 1:5000) |>
   mutate(res = map2(mu, iter, ~sim_test (n = 30, mu = .x, sigma = 5)))|>
   unnest(res)
+
+power_res = sim_results |>
+  group_by(mu) |>
+  summarize(power = mean(p.value < 0.05))
 ```
 
-Create plot
+Create plot of power and mean
 ```{r}
-
+ggplot(power_res, aes(x = mu, y = power)) +
+  geom_point(size = 5) +
+  geom_line() +
+  labs(
+    x = "mean",
+    y = "power"
+  )
 ```
 
 
