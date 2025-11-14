@@ -9,30 +9,47 @@ Load libraries
 library(tidyverse)
 library(rvest)
 library(broom)
+library(purrr)
 ```
 
 Q1
 
-Write a function that randomly draws birthdays out of 365 days & run the function 10000 times for each group size 2-50
+Write a function that randomly draws birthdays out of 365 days 
 ```{r}
-sim_birthday = function (n) {
-birthdays = sample(1:365, n, replace = TRUE)
-any(duplicated(birthdays))
+bday_sim = function(n_room) {
+  
+  birthdays = sample(1:365, n_room, replace = TRUE)
+  repeated_bday = length(unique(birthdays)) < n_room
+  repeated_bday
 }
-birthday_results = expand_grid(
-  groupsize = 2:50,
-  iter = 1:10000
-)|>
-  mutate(duplicate=map_lgl(groupsize, sim_birthday))|>
-  group_by(groupsize)|>
-  summarize(prob=mean(duplicate))
+
 ```
 
-Make a plot
+Run the function 10,000 times for each group size 2 to 50
 ```{r}
-ggplot(birthday_results, aes(x=groupsize, y=prob)) +
-  geom_point() +
-  labs(
+bday_sim_results = 
+  expand_grid(
+    bdays = 2:50, 
+    iter = 1:10000
+  ) |> 
+  mutate(
+    result = map_lgl(bdays, bday_sim)
+  ) |> 
+  group_by(
+    bdays
+  ) |> 
+  summarize(
+    prob_repeat = mean(result)
+  )
+```
+
+Plotting the results
+```{r}
+bday_sim_results |> 
+  ggplot(aes(x = bdays, y = prob_repeat)) + 
+  geom_point() + 
+  geom_line() +
+    labs(
     x = "group size",
     y = "probability"
   )
@@ -132,9 +149,39 @@ city_summary = homicides |>
     unsolved_homicides = sum(disposition %in% c("Open/No arrest")
   )) |>
   arrange(desc(total_homicides))
+
+city_summary
   
 ```
 
+Estimate proportion of unsolved homicides. Save, use broom::tidy and pull proportion and CI
 
+```{r}
+baltimore = city_summary |>
+  filter(city_state == "Baltimore,MD")
+baltimore_prop = prop.test(
+  x = baltimore$unsolved_homicides,
+  n = baltimore$total_homicides
+)
+baltimore_tidy = broom::tidy(baltimore_prop)|>
+  mutate(city_state = "Baltimore,MD")
+baltimore_tidy |>
+  select(city_state, estimate, conf.low, conf.high)|>
+  knitr::kable(digits = 3)
+```
 
+Run for each city and extract
+```{r}
+city_props = city_summary|>
+  mutate(prop_test = map2(unsolved_homicides, total_homicides, ~prop.test(.x, .y))
+  )|>
+  mutate(tidy_res = map(prop_test, broom::tidy))|>
+  unnest(tidy_res)|>
+  select(city_state, estimate, conf.low, conf.high) |>
+  knitr::kable(digits = 3)
+  
+  city_props
+```
+
+Create the plot
 
